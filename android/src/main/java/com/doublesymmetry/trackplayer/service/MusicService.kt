@@ -120,29 +120,17 @@ class MusicService : HeadlessJsTaskService() {
             notificationBuilder.foregroundServiceBehavior = NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
         }
         val notification = notificationBuilder.build()
-        if (isAppOnForeground(baseContext)) {
+        try {
+            // reference exception catch of startForegroundIfNecessary function
             startForeground(EMPTY_NOTIFICATION_ID, notification)
             @Suppress("DEPRECATION")
             stopForeground(true)
+        } catch (error: Exception) {
+            Timber.e(
+                "ForegroundServiceStartNotAllowedException: App tried to start a foreground Service when it was not allowed to do so.",
+                error
+            )
         }
-    }
-
-    private fun isAppOnForeground(context: Context): Boolean {
-        /**
-         * We need to check if app is in foreground otherwise the app will crash.
-         * https://stackoverflow.com/questions/8489993/check-android-application-is-in-foreground-or-not
-         **/
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val appProcesses = activityManager.runningAppProcesses ?: return false
-        val packageName = context.packageName
-        for (appProcess in appProcesses) {
-            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
-                appProcess.processName == packageName
-            ) {
-                return true
-            }
-        }
-        return false
     }
 
     @MainThread
